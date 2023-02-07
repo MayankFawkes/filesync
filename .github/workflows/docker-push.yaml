@@ -38,8 +38,8 @@ jobs:
           push: true
           file: ./Dockerfile
           tags: |
-            mayankfawkes/httptoy:latest
-            mayankfawkes/httptoy:${{ env.version }}
+            mayankfawkes/filesync:latest
+            mayankfawkes/filesync:${{ env.version }}
           build-args: |
             git_sha=${{ env.tag }}
             app_version=${{ env.version }}
