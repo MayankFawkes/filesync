@@ -1,0 +1,93 @@
+package server
+
+import (
+	"io"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+)
+
+func (stg *Settings) getCreated(c *gin.Context) {
+	path := c.GetHeader("path")
+	path = stg.AbsPath(path)
+
+	log.Println("client created", path)
+
+	if path == "" {
+		return
+	}
+
+	fp, _ := os.Create(path)
+
+	defer c.Request.Body.Close()
+	defer fp.Close()
+
+	l, err := io.Copy(fp, c.Request.Body)
+
+	if err != nil {
+		log.Println(err.Error())
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	} else {
+		log.Println(path, "file created and writen", l, "bytes")
+		(*stg).MyFiles.Add(path)
+		c.AbortWithStatus(http.StatusOK)
+		return
+	}
+
+}
+func (stg *Settings) getModified(c *gin.Context) {
+	path := c.GetHeader("path")
+	path = stg.AbsPath(path)
+
+	if path == "" {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	fp, _ := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+
+	defer fp.Close()
+	defer c.Request.Body.Close()
+
+	l, err := io.Copy(fp, c.Request.Body)
+
+	if err != nil {
+		log.Println(err.Error())
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	} else {
+		log.Println(path, "file modified and writen", l, "bytes")
+		(*stg).MyFiles.Add(path)
+		c.AbortWithStatus(http.StatusOK)
+		return
+	}
+}
+
+func (stg *Settings) getDeleted(c *gin.Context) {
+	path := c.GetHeader("path")
+	path = stg.AbsPath(path)
+
+	if path == "" {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	err := os.Remove(path)
+	if err != nil {
+		log.Println(err.Error())
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	} else {
+		log.Println(path, "File deleted")
+		(*stg).MyFiles.Remove(path)
+		c.AbortWithStatus(http.StatusOK)
+		return
+	}
+
+}
+func (stg *Settings) getAck(c *gin.Context) {
+	c.JSON(http.StatusOK, (*stg).MyFiles.GetAllRelative((*stg).WatchPath))
+}
