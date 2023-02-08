@@ -19,7 +19,10 @@ func (stg *Settings) getCreated(c *gin.Context) {
 		return
 	}
 
-	fp, _ := os.Create(path)
+	fp, err := os.Create(path)
+	if err != nil {
+		log.Println("CLIENT fn:getCreated os.Create error:", err.Error())
+	}
 
 	defer c.Request.Body.Close()
 	defer fp.Close()
@@ -27,7 +30,7 @@ func (stg *Settings) getCreated(c *gin.Context) {
 	l, err := io.Copy(fp, c.Request.Body)
 
 	if err != nil {
-		log.Println(err.Error())
+		log.Println("CLIENT fn:getCreated io.Copy error:", err.Error())
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	} else {
@@ -47,7 +50,10 @@ func (stg *Settings) getModified(c *gin.Context) {
 		return
 	}
 
-	fp, _ := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	fp, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		log.Println("CLIENT fn:getModified os.OpenFile error:", err.Error())
+	}
 
 	defer fp.Close()
 	defer c.Request.Body.Close()
@@ -55,7 +61,7 @@ func (stg *Settings) getModified(c *gin.Context) {
 	l, err := io.Copy(fp, c.Request.Body)
 
 	if err != nil {
-		log.Println(err.Error())
+		log.Println("CLIENT fn:getModified io.Copy error:", err.Error())
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	} else {

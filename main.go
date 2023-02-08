@@ -45,7 +45,7 @@ func main() {
 		panic(err.Error())
 	}
 
-	ackSyncTime, err := strconv.Atoi(getenv("ACK_SYNC_TIME", "300"))
+	syncTime, err := strconv.Atoi(getenv("SYNC_TIME", "300"))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -56,7 +56,7 @@ func main() {
 		Port:       port,
 		MasterIp:   net.ParseIP(mip),
 		MasterPort: mport,
-		SyncTime:   ackSyncTime,
+		SyncTime:   syncTime,
 	}
 	server.Server(stg)
 
