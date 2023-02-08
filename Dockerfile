@@ -1,19 +1,5 @@
 FROM golang:1.18 as build
 
-# Create appuser.
-# See https://stackoverflow.com/a/55757473/12429735
-ENV USER=appuser
-ENV NUID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${NUID}" \
-    "${USER}"
-
-
 
 RUN go env -w GO111MODULE=off && apt-get update && apt-get install -y ca-certificates
 RUN go get github.com/mayankfawkes/filesync
@@ -26,9 +12,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/filesync main.go
 # final stage
 FROM scratch
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /etc/passwd /etc/passwd
-COPY --from=build /etc/group /etc/group
-USER appuser:appuser
 
 ARG APPLICATION="filesync"
 ARG DESCRIPTION="Sync all your SSL and other small files around the servers with docker-compose."
