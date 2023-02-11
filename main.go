@@ -30,6 +30,11 @@ func main() {
 		nodeType = true
 	}
 
+	auth := getenv("AUTH", "")
+	if auth == "" {
+		panic("AUTH in environment variable not found")
+	}
+
 	port, err := strconv.Atoi(getenv("PORT", "8000"))
 	if err != nil {
 		panic(err.Error())
@@ -51,12 +56,14 @@ func main() {
 	}
 
 	stg := server.Settings{
+		Logging:    true,
 		WatchPath:  watchPath,
 		Server:     nodeType,
 		Port:       port,
 		MasterIp:   net.ParseIP(mip),
 		MasterPort: mport,
 		SyncTime:   syncTime,
+		Auth:       auth,
 	}
 	server.Server(stg)
 

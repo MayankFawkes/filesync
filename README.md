@@ -67,4 +67,4 @@ I had alot of problem related to letsencrypt ssl and other local environment fil
 
 ## Use Cases
 
-I have everything manual i use multiple servers loadbalancer and i dont wanna update ssl on all servers after every 3 months. i use docker-compose with my web services and nginx i wanted a solution from which i can edit server config files in one server and it will get modefied in all servers. you can also check [Rsync](https://en.wikipedia.org/wiki/Rsync, "https://en.wikipedia.org/wiki/Rsync") 
+I have everything manual i use multiple servers loadbalancer and i dont wanna update ssl on all servers after every 3 months. i use docker-compose with my web services and nginx i wanted a solution from which i can edit server config files in one server and it will get modefied in all servers. you can also check [Rsync](https://en.wikipedia.org/wiki/Rsync "https://en.wikipedia.org/wiki/Rsync") 

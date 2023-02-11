@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (stg *Settings) getWelcome(c *gin.Context) {
+func (stg *Settings) GetWelcome(c *gin.Context) {
 	var payload friend
 
 	req := c.Request

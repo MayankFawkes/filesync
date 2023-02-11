@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (stg *Settings) getCreated(c *gin.Context) {
+func (stg *Settings) GetCreated(c *gin.Context) {
 	path := c.GetHeader("path")
 	path = stg.AbsPath(path)
 
@@ -39,9 +39,9 @@ func (stg *Settings) getCreated(c *gin.Context) {
 		c.AbortWithStatus(http.StatusOK)
 		return
 	}
-
 }
-func (stg *Settings) getModified(c *gin.Context) {
+
+func (stg *Settings) GetModified(c *gin.Context) {
 	path := c.GetHeader("path")
 	path = stg.AbsPath(path)
 
@@ -72,7 +72,7 @@ func (stg *Settings) getModified(c *gin.Context) {
 	}
 }
 
-func (stg *Settings) getDeleted(c *gin.Context) {
+func (stg *Settings) GetDeleted(c *gin.Context) {
 	path := c.GetHeader("path")
 	path = stg.AbsPath(path)
 
@@ -94,6 +94,6 @@ func (stg *Settings) getDeleted(c *gin.Context) {
 	}
 
 }
-func (stg *Settings) getAck(c *gin.Context) {
+func (stg *Settings) GetAck(c *gin.Context) {
 	c.JSON(http.StatusOK, (*stg).MyFiles.GetAllRelative((*stg).WatchPath))
 }

@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func (stg *Settings) sendCreated(path string) {
+func (stg *Settings) SendCreated(path string) {
 	fp, _ := os.Open(path)
 	defer fp.Close()
 
@@ -15,12 +15,16 @@ func (stg *Settings) sendCreated(path string) {
 
 	log.Println("Created event trigger", path)
 
+	headers := dict{
+		"Path": stg.RelativePath(path),
+	}
+
 	for _, url := range (*stg).MyFriends.Url() {
-		sendSingleCreated(url, stg.RelativePath(path), fp)
+		stg.SendSingleCreated(url, headers, fp)
 	}
 }
 
-func (stg *Settings) sendModified(path string) {
+func (stg *Settings) SendModified(path string) {
 	fp, err := os.Open(path)
 
 	if err != nil {
@@ -29,50 +33,58 @@ func (stg *Settings) sendModified(path string) {
 
 	defer fp.Close()
 
-	(*stg).MyFiles.Add(path)
+	stg.MyFiles.Add(path)
 
 	log.Println("Modified event trigger", path)
 
-	for _, url := range (*stg).MyFriends.Url() {
-		sendSingleModified(url, stg.RelativePath(path), fp)
+	headers := dict{
+		"Path": stg.RelativePath(path),
+	}
+
+	for _, url := range stg.MyFriends.Url() {
+		stg.SendSingleModified(url, headers, fp)
 	}
 }
 
-func (stg *Settings) sendDeleted(path string) {
+func (stg *Settings) SendDeleted(path string) {
 	log.Println("Deleted event trigger", path)
 
-	(*stg).MyFiles.Remove(path)
+	stg.MyFiles.Remove(path)
+
+	headers := dict{
+		"Path": stg.RelativePath(path),
+	}
 
 	for _, url := range (*stg).MyFriends.Url() {
-		sendSingleDelete(url, stg.RelativePath(path))
+		stg.SendSingleDelete(url, headers)
 	}
 }
 
 // --------------------------------------------------
 
-func sendSingleCreated(url string, path string, fp *os.File) *http.Response {
-	return makeRequest(
+func (stg *Settings) SendSingleCreated(url string, headers dict, fp *os.File) *http.Response {
+	return stg.MakeRequest(
 		"POST",
 		fmt.Sprintf("%s/created", url),
-		dict{"path": path},
+		headers,
 		fp,
 	)
 }
 
-func sendSingleModified(url string, path string, fp *os.File) *http.Response {
-	return makeRequest(
+func (stg *Settings) SendSingleModified(url string, headers dict, fp *os.File) *http.Response {
+	return stg.MakeRequest(
 		"POST",
 		fmt.Sprintf("%s/modified", url),
-		dict{"path": path},
+		headers,
 		fp,
 	)
 }
 
-func sendSingleDelete(url string, path string) *http.Response {
-	return makeRequest(
+func (stg *Settings) SendSingleDelete(url string, headers dict) *http.Response {
+	return stg.MakeRequest(
 		"DELETE",
 		fmt.Sprintf("%s/deleted", url),
-		dict{"path": path},
+		headers,
 		nil,
 	)
 }

@@ -75,12 +75,14 @@ func (d *fileNhash) GetAllAbs(basepath string) dict {
 type Settings struct {
 	MyFriends  friends
 	MyFiles    fileNhash
+	Logging    bool
 	WatchPath  string
 	Server     bool
 	Port       int
 	MasterIp   net.IP
 	MasterPort int
 	SyncTime   int
+	Auth       string
 }
 
 func (res *Settings) RelativePath(targpath string) string {
