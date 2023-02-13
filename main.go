@@ -4,6 +4,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/mayankfawkes/filesync/pkg/server"
 )
@@ -55,8 +56,14 @@ func main() {
 		panic(err.Error())
 	}
 
+	var debug bool
+
+	if strings.ToLower(getenv("DEBUG", "true")) == "true" {
+		debug = true
+	}
+
 	stg := server.Settings{
-		Logging:    true,
+		Logging:    server.Logging{Enable: true, Debug: debug},
 		WatchPath:  watchPath,
 		Server:     nodeType,
 		Port:       port,

@@ -1,26 +1,29 @@
 package server
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"os"
 )
 
 func (stg *Settings) SendCreated(path string) {
-	fp, _ := os.Open(path)
+	fp, err := os.Open(path)
+	if err != nil {
+		stg.LogError(err)
+		return
+	}
+
 	defer fp.Close()
 
-	(*stg).MyFiles.Add(path)
+	stg.MyFiles.Add(path)
 
-	log.Println("Created event trigger", path)
+	stg.LogDebug("Created event trigger", path)
 
 	headers := dict{
 		"Path": stg.RelativePath(path),
 	}
 
-	for _, url := range (*stg).MyFriends.Url() {
-		stg.SendSingleCreated(url, headers, fp)
+	for _, frnd := range stg.MyFriends {
+		stg.SendSingleCreated(frnd, headers, fp)
 	}
 }
 
@@ -28,26 +31,27 @@ func (stg *Settings) SendModified(path string) {
 	fp, err := os.Open(path)
 
 	if err != nil {
-		log.Println("Error mod", err)
+		stg.LogError(err)
+		return
 	}
 
 	defer fp.Close()
 
 	stg.MyFiles.Add(path)
 
-	log.Println("Modified event trigger", path)
+	stg.LogDebug("Modified event trigger", path)
 
 	headers := dict{
 		"Path": stg.RelativePath(path),
 	}
 
-	for _, url := range stg.MyFriends.Url() {
-		stg.SendSingleModified(url, headers, fp)
+	for _, frnd := range stg.MyFriends {
+		stg.SendSingleModified(frnd, headers, fp)
 	}
 }
 
 func (stg *Settings) SendDeleted(path string) {
-	log.Println("Deleted event trigger", path)
+	stg.LogDebug("Deleted event trigger", path)
 
 	stg.MyFiles.Remove(path)
 
@@ -55,36 +59,45 @@ func (stg *Settings) SendDeleted(path string) {
 		"Path": stg.RelativePath(path),
 	}
 
-	for _, url := range (*stg).MyFriends.Url() {
-		stg.SendSingleDelete(url, headers)
+	for _, frnd := range stg.MyFriends {
+		stg.SendSingleDelete(frnd, headers)
 	}
 }
 
 // --------------------------------------------------
 
-func (stg *Settings) SendSingleCreated(url string, headers dict, fp *os.File) *http.Response {
+func (stg *Settings) SendSingleCreated(frnd friend, headers dict, fp *os.File) (*http.Response, error) {
 	return stg.MakeRequest(
-		"POST",
-		fmt.Sprintf("%s/created", url),
-		headers,
-		fp,
+		&requestPayload{
+			Method:  "POST",
+			Friend:  frnd,
+			Path:    "/created",
+			Headers: headers,
+			Body:    fp,
+		},
 	)
 }
 
-func (stg *Settings) SendSingleModified(url string, headers dict, fp *os.File) *http.Response {
+func (stg *Settings) SendSingleModified(frnd friend, headers dict, fp *os.File) (*http.Response, error) {
 	return stg.MakeRequest(
-		"POST",
-		fmt.Sprintf("%s/modified", url),
-		headers,
-		fp,
+		&requestPayload{
+			Method:  "POST",
+			Friend:  frnd,
+			Path:    "/modified",
+			Headers: headers,
+			Body:    fp,
+		},
 	)
 }
 
-func (stg *Settings) SendSingleDelete(url string, headers dict) *http.Response {
+func (stg *Settings) SendSingleDelete(frnd friend, headers dict) (*http.Response, error) {
 	return stg.MakeRequest(
-		"DELETE",
-		fmt.Sprintf("%s/deleted", url),
-		headers,
-		nil,
+		&requestPayload{
+			Method:  "DELETE",
+			Friend:  frnd,
+			Path:    "/deleted",
+			Headers: headers,
+			Body:    nil,
+		},
 	)
 }

@@ -3,29 +3,58 @@ package server
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
-	"path/filepath"
-	"time"
 )
 
-func (stg *Settings) MakeRequest(method, url string, headers dict, body io.Reader) *http.Response {
+func checkError(err error) string {
+	var errStr string
+	if err, ok := err.(*url.Error); ok {
+		if err, ok := err.Err.(*net.OpError); ok {
+			if _, ok := err.Err.(*net.DNSError); ok {
+				errStr = "Timeout Error"
+			}
+		}
+	}
+
+	if e, ok := err.(*url.Error); ok && e.Timeout() {
+		errStr = "DNS Error"
+	}
+
+	return errStr
+}
+
+func (stg *Settings) MakeRequest(rp *requestPayload) (*http.Response, error) {
 	client := &http.Client{}
 
-	req, _ := http.NewRequest(method, url, body)
+	stg.LogDebug("Sending", rp.Method, rp.Path)
+
+	req, _ := http.NewRequest(rp.Method, fmt.Sprintf("http://%s%s", rp.Friend.Host(), rp.Path), rp.Body)
 
 	req.Header.Add("Authorization", stg.Auth)
-	for key, value := range headers {
+	for key, value := range rp.Headers {
 		req.Header.Add(key, value)
 	}
 
-	resp, _ := client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		errStr := checkError(err)
 
-	return resp
+		stg.LogError(rp.Method, fmt.Sprintf("%s%s", rp.Friend.Host(), rp.Path), err.Error(), errStr)
+		stg.LogInfo("Removing", rp.Friend.Host())
+
+		stg.MyFriends.Remove(rp.Friend.Ip.String())
+		return nil, err
+	}
+
+	stg.LogInfo(resp.StatusCode, rp.Method, fmt.Sprintf("%s%s", rp.Friend.Host(), rp.Path))
+
+	return resp, nil
 }
 
 func md5sum(filePath string) (string, error) {
@@ -42,72 +71,18 @@ func md5sum(filePath string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (stg *Settings) InitFiles() {
-
-	walk := func(path string, info os.FileInfo, merr error) error {
-		fileInfo, err := os.Stat(path)
-		if err != nil {
-			return err
-		}
-
-		if fileInfo.IsDir() {
-			return nil
-		}
-
-		(*stg).MyFiles.Add(path)
-
-		return err
-	}
-
-	filepath.Walk((*stg).WatchPath, walk)
-}
-
-func (stg *Settings) InitServer() {
-
-	time.Sleep(5 * time.Second)
-	for {
-		for _, url := range (*stg).MyFriends.Url() {
-			resp := stg.MakeRequest(
-				"GET",
-				fmt.Sprintf("%s/ack", url),
-				dict{"Authorization": stg.Auth},
-				nil,
-			)
-			payload := make(fileNhash)
-			bdy, _ := io.ReadAll(resp.Body)
-			resp.Body.Close()
-
-			json.Unmarshal(bdy, &payload)
-
-			go stg.Sync(
-				payload.GetAllAbs((*stg).WatchPath),
-				url,
-			)
-		}
-
-		time.Sleep(time.Duration(stg.SyncTime) * time.Second)
-	}
-}
-
-func (stg *Settings) InitClient() {
-
-	for {
-		stg.SendWelcome(stg.MasterIp.String(), stg.MasterPort, stg.Port, stg.Auth)
-
-		time.Sleep(time.Duration(stg.SyncTime) * time.Second)
-	}
-}
-
-func (stg *Settings) Sync(fnh dict, url string) {
+func (stg *Settings) Sync(fnh dict, frnd friend) {
 	sfiles := stg.MyFiles
 	cfiles := fnh
+
+	stg.LogInfo("Sync Started for", frnd.Host())
 
 	for key, value := range sfiles {
 		if cfiles[key] == "" {
 			stg.SendCreated(key)
 		} else {
 			if cfiles[key] != value {
-				fmt.Println("semding mod", key)
+				stg.LogDebug("Sync Sending Modification", frnd.Host())
 				stg.SendModified(key)
 			}
 		}
@@ -115,6 +90,7 @@ func (stg *Settings) Sync(fnh dict, url string) {
 
 	for key := range cfiles {
 		if sfiles[key] == "" {
+			stg.LogDebug("Sync Sending Deletion", frnd.Host())
 			stg.SendDeleted(key)
 		}
 	}

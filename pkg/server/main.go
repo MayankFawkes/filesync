@@ -1,32 +1,46 @@
 package server
 
 import (
+	"flag"
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mayankfawkes/filesync/pkg/watch"
 )
 
+func setupLogging(lg Logging) {
+	if !lg.Enable {
+		return
+	}
+	flag.Set("logtostderr", "true")
+	// flag.Set("alsologtostderr", "true")
+	// flag.Set("log_dir", "filesync.log")
+
+	if lg.Debug {
+		flag.Set("v", "2")
+	}
+
+}
+
 func Server(stg Settings) {
+
+	// Setup logging
+	setupLogging(stg.Logging)
+
+	stg.LogInfo("Filesync starting, Version:", os.Getenv("APP_VERSION"), "GitSHA", os.Getenv("GIT_SHA"))
+
 	stg.MyFriends = make(friends)
 	stg.MyFiles = make(fileNhash)
 
 	gin.SetMode(gin.ReleaseMode)
 
-	var r *gin.Engine
-
-	log.Println(stg.Logging)
-
-	if stg.Logging {
-		r = gin.Default()
-	} else {
-		r = gin.New()
-	}
+	r := gin.New()
 
 	r.Use(stg.AuthMiddleware())
 
 	if stg.Server {
+		stg.LogInfo("Filesync Master initiating")
 		go stg.InitServer()
 
 		// server endpoints
@@ -48,7 +62,7 @@ func Server(stg Settings) {
 			}
 		}()
 	} else {
-		fmt.Println("Client init done")
+		stg.LogInfo("Filesync Client initiating")
 		go stg.InitClient()
 
 		// client endpoints
@@ -59,10 +73,10 @@ func Server(stg Settings) {
 	}
 
 	stg.InitFiles()
-
-	fmt.Println(stg.MyFriends)
+	stg.LogInfo("Filesync initiating files")
 
 	// run the server
+	stg.LogInfo("Filesync starting on port:", stg.Port)
 	r.Run(fmt.Sprintf(":%d", stg.Port))
 
 }

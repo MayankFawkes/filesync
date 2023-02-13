@@ -2,18 +2,24 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 )
 
-func (stg *Settings) SendWelcome(host string, port int, lport int, auth string) {
+func (stg *Settings) SendWelcome() {
 
-	someString, _ := json.Marshal(map[string]interface{}{"ip": "", "port": lport})
+	someString, _ := json.Marshal(map[string]interface{}{"ip": "", "port": stg.Port})
 	fp := strings.NewReader(string(someString))
+
+	stg.LogDebug("Processing Welcome Request")
+
 	stg.MakeRequest(
-		"POST",
-		fmt.Sprintf("http://%s:%d/welcome", host, port),
-		dict{},
-		fp,
+		&requestPayload{
+			Method:  "POST",
+			Friend:  friend{Ip: stg.MasterIp, Port: stg.MasterPort},
+			Path:    "/welcome",
+			Headers: dict{},
+			Body:    fp,
+		},
 	)
+	stg.LogDebug("Welcome Request Sent")
 }

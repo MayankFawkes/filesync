@@ -16,6 +16,7 @@ func TestMain(t *testing.T) {
 		Port:      8000,
 		SyncTime:  30,
 		Auth:      "123456789",
+		Logging:   server.Logging{Enable: true, Debug: true},
 	}
 
 	cstg := server.Settings{
@@ -26,12 +27,13 @@ func TestMain(t *testing.T) {
 		MasterPort: 8000,
 		SyncTime:   30,
 		Auth:       "123456789",
+		Logging:    server.Logging{Enable: true, Debug: true},
 	}
 
 	go server.Server(stg)
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 
-	go server.Server(cstg)
+	server.Server(cstg)
 
 }

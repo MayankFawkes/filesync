@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net"
 	"net/http"
 
@@ -16,19 +15,25 @@ func (stg *Settings) GetWelcome(c *gin.Context) {
 	req := c.Request
 
 	defer req.Body.Close()
-	bdy, _ := io.ReadAll(req.Body)
+	bdy, err := io.ReadAll(req.Body)
 
-	err := json.Unmarshal(bdy, &payload)
+	if err != nil {
+		stg.LogError(err.Error())
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	err = json.Unmarshal(bdy, &payload)
+
+	if err != nil {
+		stg.LogError(err.Error())
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
 
 	if payload.Ip == nil {
 		payload.Ip = net.ParseIP(c.ClientIP())
 	}
 
-	if err != nil {
-		log.Println(err.Error())
-		c.Data(http.StatusBadRequest, "text/plain; charset=utf-8", []byte(err.Error()))
-		return
-	}
-
-	(*stg).MyFriends.Add(payload)
+	stg.MyFriends.Add(payload)
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"path/filepath"
 )
@@ -10,6 +11,10 @@ import (
 type friend struct {
 	Ip   net.IP `json:"ip"`
 	Port int    `json:"port"`
+}
+
+func (fs *friend) Host() string {
+	return fmt.Sprintf("%s:%d", fs.Ip.String(), fs.Port)
 }
 
 type friends map[string]friend
@@ -27,7 +32,7 @@ func (fs *friends) Remove(f string) *friends {
 func (fs *friends) Url() []string {
 	lst := []string{}
 	for _, value := range *fs {
-		lst = append(lst, fmt.Sprintf("http://%s:%d", value.Ip.String(), value.Port))
+		lst = append(lst, value.Host())
 	}
 	return lst
 }
@@ -72,10 +77,15 @@ func (d *fileNhash) GetAllAbs(basepath string) dict {
 	return p
 }
 
+type Logging struct {
+	Enable bool
+	Debug  bool
+}
+
 type Settings struct {
 	MyFriends  friends
 	MyFiles    fileNhash
-	Logging    bool
+	Logging    Logging
 	WatchPath  string
 	Server     bool
 	Port       int
@@ -98,4 +108,12 @@ func (res *Settings) AbsPath(targpath string) string {
 
 	return path
 
+}
+
+type requestPayload struct {
+	Method  string
+	Friend  friend
+	Path    string
+	Headers dict
+	Body    io.Reader
 }
