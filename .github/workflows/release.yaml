@@ -1,8 +1,11 @@
 name: Go release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - v*
+
+    
 
 jobs:
   releases-matrix:
@@ -19,11 +22,22 @@ jobs:
           - goarch: arm64
             goos: windows
     steps:
-    - uses: actions/checkout@v3
-    - uses: wangyoucao577/go-release-action@v1.35
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: ${{ matrix.goos }}
-        goarch: ${{ matrix.goarch }}
-        binary_name: "filesync"
-        compress_assets: OFF
+      - name: Create SHA Container Tag
+        id: sha_tag
+        run: |
+          tag=$(cut -c 1-7 <<< $GITHUB_SHA)
+          echo "tag=$tag" >> $GITHUB_ENV
+          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Go release
+      - uses: wangyoucao577/go-release-action@v1.35
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          binary_name: "filesync"
+          compress_assets: OFF
+          release_tag: ${{ env.version }}
