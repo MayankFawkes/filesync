@@ -10,7 +10,7 @@ Sync all your SSL and other small files around the servers with docker-compose
 
 
 ## Links
-- [https://hub.docker.com/r/mayankfawkes/httptoy](https://hub.docker.com/r/mayankfawkes/httptoy "https://hub.docker.com/r/mayankfawkes/httptoy")
+- [https://hub.docker.com/r/mayankfawkes/filesync](https://hub.docker.com/r/mayankfawkes/filesync "https://hub.docker.com/r/mayankfawkes/filesync")
 
 ## Setup 
 
