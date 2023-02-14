@@ -1,10 +1,8 @@
 name: Go release
 
 on:
-  push:
-    tags:
-      - v*
-
+  release:
+    types: [created]
     
 
 jobs:
@@ -22,13 +20,6 @@ jobs:
           - goarch: arm64
             goos: windows
     steps:
-      - name: Create SHA Container Tag
-        id: sha_tag
-        run: |
-          tag=$(cut -c 1-7 <<< $GITHUB_SHA)
-          echo "tag=$tag" >> $GITHUB_ENV
-          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
       - name: Checkout code
         uses: actions/checkout@v3
       
@@ -40,4 +31,3 @@ jobs:
           goarch: ${{ matrix.goarch }}
           binary_name: "filesync"
           compress_assets: OFF
-          release_tag: ${{ env.version }}
