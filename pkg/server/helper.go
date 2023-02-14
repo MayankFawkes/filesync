@@ -97,7 +97,7 @@ func (stg *Settings) Sync(fnh Dict, frnd friend) {
 }
 
 func EnsureDir(dirName string) error {
-	err := os.MkdirAll(dirName, os.ModeDir)
+	err := os.MkdirAll(dirName, 0700)
 	if err == nil {
 		return err
 	}
