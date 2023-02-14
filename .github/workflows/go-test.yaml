@@ -33,7 +33,7 @@ jobs:
       - name: Upload Go test results
         uses: actions/upload-artifact@v3
         with:
-          name: Go-build-test-${{ matrix.go-version }}
+          name: filesync-${{ matrix.go-version }}
           path: |
             TestResults-${{ matrix.go-version }}.json
             filesync-${{ matrix.go-version }}
