@@ -17,7 +17,7 @@ jobs:
         run: |
           tag=$(cut -c 1-7 <<< $GITHUB_SHA)
           echo "tag=$tag" >> $GITHUB_ENV
-          echo "version=${GITHUB_REF#refs/v*/}" >> $GITHUB_ENV
+          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Check if beta
         id: check-tag
