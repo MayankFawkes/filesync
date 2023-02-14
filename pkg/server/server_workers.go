@@ -18,11 +18,11 @@ func (stg *Settings) SendCreated(path string) {
 
 	stg.LogDebug("Created event trigger", path)
 
-	headers := dict{
+	headers := Dict{
 		"Path": stg.RelativePath(path),
 	}
 
-	for _, frnd := range stg.MyFriends {
+	for _, frnd := range stg.MyFriends.m {
 		stg.SendSingleCreated(frnd, headers, fp)
 	}
 }
@@ -41,11 +41,11 @@ func (stg *Settings) SendModified(path string) {
 
 	stg.LogDebug("Modified event trigger", path)
 
-	headers := dict{
+	headers := Dict{
 		"Path": stg.RelativePath(path),
 	}
 
-	for _, frnd := range stg.MyFriends {
+	for _, frnd := range stg.MyFriends.m {
 		stg.SendSingleModified(frnd, headers, fp)
 	}
 }
@@ -55,18 +55,18 @@ func (stg *Settings) SendDeleted(path string) {
 
 	stg.MyFiles.Remove(path)
 
-	headers := dict{
+	headers := Dict{
 		"Path": stg.RelativePath(path),
 	}
 
-	for _, frnd := range stg.MyFriends {
+	for _, frnd := range stg.MyFriends.m {
 		stg.SendSingleDelete(frnd, headers)
 	}
 }
 
 // --------------------------------------------------
 
-func (stg *Settings) SendSingleCreated(frnd friend, headers dict, fp *os.File) (*http.Response, error) {
+func (stg *Settings) SendSingleCreated(frnd friend, headers Dict, fp *os.File) (*http.Response, error) {
 	return stg.MakeRequest(
 		&requestPayload{
 			Method:  "POST",
@@ -78,7 +78,7 @@ func (stg *Settings) SendSingleCreated(frnd friend, headers dict, fp *os.File) (
 	)
 }
 
-func (stg *Settings) SendSingleModified(frnd friend, headers dict, fp *os.File) (*http.Response, error) {
+func (stg *Settings) SendSingleModified(frnd friend, headers Dict, fp *os.File) (*http.Response, error) {
 	return stg.MakeRequest(
 		&requestPayload{
 			Method:  "POST",
@@ -90,7 +90,7 @@ func (stg *Settings) SendSingleModified(frnd friend, headers dict, fp *os.File) 
 	)
 }
 
-func (stg *Settings) SendSingleDelete(frnd friend, headers dict) (*http.Response, error) {
+func (stg *Settings) SendSingleDelete(frnd friend, headers Dict) (*http.Response, error) {
 	return stg.MakeRequest(
 		&requestPayload{
 			Method:  "DELETE",

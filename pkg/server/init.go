@@ -26,22 +26,22 @@ func (stg *Settings) InitFiles() {
 	}
 
 	filepath.Walk(stg.WatchPath, walk)
-	stg.LogDebug("Initiating files completed found", len(stg.MyFiles), "files")
+	stg.LogDebug("Initiating files completed found", len(stg.MyFiles.m), "files")
 }
 
 func (stg *Settings) InitServer() {
 
 	stg.LogDebug("Initiating Ack Requests")
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 	for {
-		for _, frnd := range stg.MyFriends {
+		for _, frnd := range stg.MyFriends.m {
 			resp, err := stg.MakeRequest(
 				&requestPayload{
 					Method:  "GET",
 					Friend:  frnd,
 					Path:    "/ack",
-					Headers: dict{"Authorization": stg.Auth},
+					Headers: Dict{"Authorization": stg.Auth},
 					Body:    nil,
 				},
 			)
@@ -51,7 +51,7 @@ func (stg *Settings) InitServer() {
 				continue
 			}
 
-			payload := make(fileNhash)
+			payload := make(Dict)
 			bdy, err := io.ReadAll(resp.Body)
 
 			if err != nil {
@@ -67,8 +67,10 @@ func (stg *Settings) InitServer() {
 				continue
 			}
 
+			fnh := fileNhash{m: payload}
+
 			go stg.Sync(
-				payload.GetAllAbs(stg.WatchPath),
+				fnh.GetAllAbs(stg.WatchPath),
 				frnd,
 			)
 		}

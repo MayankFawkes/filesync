@@ -72,6 +72,6 @@ func main() {
 		SyncTime:   syncTime,
 		Auth:       auth,
 	}
-	server.Server(stg)
+	server.Server(&stg)
 
 }

@@ -17,7 +17,7 @@ func (stg *Settings) SendWelcome() {
 			Method:  "POST",
 			Friend:  friend{Ip: stg.MasterIp, Port: stg.MasterPort},
 			Path:    "/welcome",
-			Headers: dict{},
+			Headers: Dict{},
 			Body:    fp,
 		},
 	)

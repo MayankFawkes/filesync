@@ -1,4 +1,4 @@
-# filesync ⚠️ Not Production ready
+# filesync ⚠️ testing bugs
 Sync all your SSL and other small files around the servers with docker-compose
 
 
@@ -28,13 +28,14 @@ services:
       - 8000:8000
     environment:
       NODE: MASTER
-      WATCH_PATH: './data'
+      WATCH_PATH: '/data'
       PORT: 8000
+      AUTH: 'secret_key_here'
     volumes:
       - ./data:/data:ro
 ```
 
-### Worker
+### Slave
 
 ```
 version: "3.7"
@@ -46,17 +47,19 @@ services:
       - 8000:8000
     environment:
       NODE: WORKER
-      WATCH_PATH: './data'
+      WATCH_PATH: '/data'
       PORT: 8000
       MASTER_IP: '172.31.37.244'
       MASTER_PORT: 8000
+      AUTH: 'secret_key_here'
+
     volumes:
       - ./data:/data
 
 ```
 
 
-All the file of Master node at location `./data` will be live sync with worker at `./data`
+All the file of Master node at location `./data` will be live sync with slave at `./data`, you can add multiple slave nodes.
 
 
 

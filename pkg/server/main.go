@@ -23,15 +23,15 @@ func setupLogging(lg Logging) {
 
 }
 
-func Server(stg Settings) {
+func Server(stg *Settings) {
 
 	// Setup logging
 	setupLogging(stg.Logging)
 
 	stg.LogInfo("Filesync starting, Version:", os.Getenv("APP_VERSION"), "GitSHA", os.Getenv("GIT_SHA"))
 
-	stg.MyFriends = make(friends)
-	stg.MyFiles = make(fileNhash)
+	stg.MyFriends = &friends{m: make(map[string]friend)}
+	stg.MyFiles = &fileNhash{m: make(Dict)}
 
 	gin.SetMode(gin.ReleaseMode)
 

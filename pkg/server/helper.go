@@ -71,13 +71,13 @@ func md5sum(filePath string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (stg *Settings) Sync(fnh dict, frnd friend) {
+func (stg *Settings) Sync(fnh Dict, frnd friend) {
 	sfiles := stg.MyFiles
 	cfiles := fnh
 
 	stg.LogInfo("Sync Started for", frnd.Host())
 
-	for key, value := range sfiles {
+	for key, value := range sfiles.m {
 		if cfiles[key] == "" {
 			stg.SendCreated(key)
 		} else {
@@ -89,17 +89,17 @@ func (stg *Settings) Sync(fnh dict, frnd friend) {
 	}
 
 	for key := range cfiles {
-		if sfiles[key] == "" {
+		if !sfiles.Check(key) {
 			stg.LogDebug("Sync Sending Deletion", frnd.Host())
 			stg.SendDeleted(key)
 		}
 	}
 }
 
-func ensureDir(dirName string) error {
-	err := os.Mkdir(dirName, os.ModeDir)
+func EnsureDir(dirName string) error {
+	err := os.MkdirAll(dirName, os.ModeDir)
 	if err == nil {
-		return nil
+		return err
 	}
 	if os.IsExist(err) {
 		// check that the existing path is a directory

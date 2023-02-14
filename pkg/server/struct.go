@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"path/filepath"
+	"sync"
 )
 
 type friend struct {
@@ -17,48 +18,83 @@ func (fs *friend) Host() string {
 	return fmt.Sprintf("%s:%d", fs.Ip.String(), fs.Port)
 }
 
-type friends map[string]friend
+// type friends map[string]friend
+
+type friends struct {
+	sync.RWMutex
+	m map[string]friend
+}
 
 func (fs *friends) Add(f friend) *friends {
-	(*fs)[f.Ip.String()] = f
+	fs.Lock()
+	defer fs.Unlock()
+	fs.m[f.Ip.String()] = f
 	return fs
 }
 
 func (fs *friends) Remove(f string) *friends {
-	delete((*fs), f)
+	fs.Lock()
+	defer fs.Unlock()
+	delete(fs.m, f)
 	return fs
 }
 
 func (fs *friends) Url() []string {
 	lst := []string{}
-	for _, value := range *fs {
+	fs.RLock()
+	defer fs.RUnlock()
+	for _, value := range fs.m {
 		lst = append(lst, value.Host())
 	}
 	return lst
 }
 
-type dict map[string]string
+type Dict map[string]string
 
-func (d *dict) Json() ([]byte, error) {
+func (d *Dict) Json() ([]byte, error) {
 	jsonString, err := json.Marshal(*d)
 	return jsonString, err
 }
 
-type fileNhash dict
+// type fileNhash dict
+type fileNhash struct {
+	sync.RWMutex
+	m Dict
+}
 
 func (d *fileNhash) Add(path string) {
 	sum, _ := md5sum(path)
-	(*d)[path] = sum
+	d.Lock()
+	defer d.Unlock()
+	d.m[path] = sum
 }
 
 func (d *fileNhash) Remove(path string) {
-	delete((*d), path)
+	d.Lock()
+	defer d.Unlock()
+	delete(d.m, path)
 }
 
-func (d *fileNhash) GetAllRelative(basepath string) dict {
-	p := make(dict)
+func (d *fileNhash) Check(path string) bool {
+	d.RLock()
+	defer d.RUnlock()
+	s := d.m[path]
+	return len(s) != 0
+}
 
-	for targpath, hash := range *d {
+func (d *fileNhash) Compare(key string, value string) bool {
+	d.RLock()
+	defer d.RUnlock()
+	return d.m[key] == value
+}
+
+func (d *fileNhash) GetAllRelative(basepath string) Dict {
+	p := make(Dict)
+
+	d.RLock()
+	defer d.RUnlock()
+
+	for targpath, hash := range d.m {
 		relPath, _ := filepath.Rel(basepath, targpath)
 		p[relPath] = hash
 	}
@@ -66,10 +102,13 @@ func (d *fileNhash) GetAllRelative(basepath string) dict {
 	return p
 }
 
-func (d *fileNhash) GetAllAbs(basepath string) dict {
-	p := make(dict)
+func (d *fileNhash) GetAllAbs(basepath string) Dict {
+	p := make(Dict)
 
-	for targpath, hash := range *d {
+	d.RLock()
+	defer d.RUnlock()
+
+	for targpath, hash := range d.m {
 		relPath := filepath.Join(basepath, targpath)
 		p[relPath] = hash
 	}
@@ -83,8 +122,8 @@ type Logging struct {
 }
 
 type Settings struct {
-	MyFriends  friends
-	MyFiles    fileNhash
+	MyFriends  *friends
+	MyFiles    *fileNhash
 	Logging    Logging
 	WatchPath  string
 	Server     bool
@@ -104,7 +143,7 @@ func (res *Settings) AbsPath(targpath string) string {
 	path := filepath.Join((*res).WatchPath, targpath)
 
 	dir := filepath.Dir(path)
-	ensureDir(dir)
+	EnsureDir(dir)
 
 	return path
 
@@ -114,6 +153,6 @@ type requestPayload struct {
 	Method  string
 	Friend  friend
 	Path    string
-	Headers dict
+	Headers Dict
 	Body    io.Reader
 }
