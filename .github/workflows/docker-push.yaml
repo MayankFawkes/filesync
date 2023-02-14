@@ -18,7 +18,7 @@ jobs:
           tag=$(cut -c 1-7 <<< $GITHUB_SHA)
           echo "tag=$tag" >> $GITHUB_ENV
           echo "version=${GITHUB_REF#refs/v*/}" >> $GITHUB_ENV
-          if [[ ${{ github.event.ref }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+rc[0-9]+$ ]]
+          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+rc[0-9]+$ ]]
           then  
               echo "beta=true" >> $GITHUB_ENV
           else
