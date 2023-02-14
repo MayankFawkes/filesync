@@ -46,7 +46,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      NODE: WORKER
+      NODE: SLAVE
       WATCH_PATH: '/data'
       PORT: 8000
       MASTER_IP: '172.31.37.244'
