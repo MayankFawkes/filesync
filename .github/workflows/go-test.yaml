@@ -25,6 +25,9 @@ jobs:
         run: go build -v -o filesync-${{ matrix.go-version }}
 
       - name: Test and Save
+        run: go test -v
+
+      - name: Test and Save
         run: go test -v -json > TestResults-${{ matrix.go-version }}.json
 
       - name: Upload Go test results
