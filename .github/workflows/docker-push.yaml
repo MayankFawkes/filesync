@@ -18,7 +18,7 @@ jobs:
           tag=$(cut -c 1-7 <<< $GITHUB_SHA)
           echo "tag=$tag" >> $GITHUB_ENV
           echo "version=${GITHUB_REF#refs/v*/}" >> $GITHUB_ENV
-          if [[ ${{ github.event.ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+b$ ]]
+          if [[ ${{ github.event.ref }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+rc[0-9]+$ ]]
           then  
               echo "beta=true" >> $GITHUB_ENV
           else
@@ -48,6 +48,20 @@ jobs:
           file: ./Dockerfile
           tags: |
             mayankfawkes/filesync:latest
+            mayankfawkes/filesync:${{ env.version }}
+          build-args: |
+            git_sha=${{ env.tag }}
+            app_version=${{ env.version }}
+      
+      - name: Build and push
+        if: ${{ env.beta }} == 'true'
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          file: ./Dockerfile
+          tags: |
             mayankfawkes/filesync:${{ env.version }}
           build-args: |
             git_sha=${{ env.tag }}
