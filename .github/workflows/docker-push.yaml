@@ -17,7 +17,7 @@ jobs:
         run: |
           tag=$(cut -c 1-7 <<< $GITHUB_SHA)
           echo "tag=$tag" >> $GITHUB_ENV
-          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "version=${GITHUB_REF#refs/v*/}" >> $GITHUB_ENV
           
       - name: Checkout code
         uses: actions/checkout@v3
@@ -38,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: ${{ github.ref }}
 
       - name: Build and push
         uses: docker/build-push-action@v4
