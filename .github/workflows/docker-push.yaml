@@ -18,7 +18,7 @@ jobs:
           tag=$(cut -c 1-7 <<< $GITHUB_SHA)
           echo "tag=$tag" >> $GITHUB_ENV
           echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-          echo "platforms=linux/amd64,linux/arm64,linux/arm/v7,linux/386,linux/mips64le,linux/ppc64le,linux/s390x" >> $GITHUB_ENV
+          echo "platforms=linux/amd64,linux/arm64,linux/arm/v7,linux/386" >> $GITHUB_ENV
 
       - name: Check if beta
         id: check-tag
