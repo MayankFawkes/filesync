@@ -30,4 +30,5 @@ jobs:
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
           binary_name: "filesync"
+          asset_name: filesync-${{ matrix.goos }}-${{ matrix.goarch }}
           compress_assets: OFF
