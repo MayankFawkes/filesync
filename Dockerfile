@@ -1,11 +1,17 @@
 FROM golang:1.18 as build
 
+WORKDIR /app
 
-RUN go env -w GO111MODULE=off && apt-get update && apt-get install -y ca-certificates
-RUN go get github.com/mayankfawkes/filesync
+RUN apt-get update && apt-get install -y ca-certificates
+
+COPY go.mod ./
+COPY go.sum ./
+
+RUN go mod download
+
+COPY . .
 
 # Build
-WORKDIR /go/src/github.com/mayankfawkes/filesync
 RUN CGO_ENABLED=0 GOOS=linux go build -o /go/bin/filesync main.go
 
 ###############################################################################
